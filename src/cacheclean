@@ -5,7 +5,8 @@ to keep.
 Usage: cacheclean {-p} {-v} <# of copies to keep>
 	# of copies to keep - (required) how many generations of each package to keep
 	-p - (optional) preview what would be deleted; forces verbose (-v) mode.
-	-v - (optional) show deleted packages."""
+	-v - (optional) show deleted packages.
+	-d - (optional) non-standard cache directory"""
 
 # Note that the determination of package age is done by simply looking at the date-time
 # modified stamp on the file. There is just enough variation in the way package version
@@ -53,13 +54,15 @@ def cleanup(run_list):
 
 ######################################################################
 # mainline processing
+opt_dir = "/var/cache/pacman/pkg"
 
 # process command line options
 try:
-	opts, pargs = getopt.getopt(sys.argv[1:], 'vp')
+	opts, pargs = getopt.getopt(sys.argv[1:], 'vpd:')
 	opt_dict = dict(opts)
 	opt_preview = '-p' in opt_dict
 	opt_verbose = '-v' in opt_dict
+	if '-d' in opt_dict: opt_dir = opt_dict['-d']
 	if opt_preview: opt_verbose = True
 	if len(pargs) == 1:
 		n_to_keep = pargs[0]
@@ -75,7 +78,7 @@ except getopt.GetoptError as msg:
 	sys.exit(1)
 
 # change to the pkg directory & get a sorted list of its contents
-os.chdir('/var/cache/pacman/pkg')
+os.chdir(opt_dir)
 pkg_fns = os.listdir('.')
 pkg_fns.sort()
 
