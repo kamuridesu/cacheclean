@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-cacheclean - a simple python script to clean up the /var/cache/pacman/pkg directory.
+A simple Python script to clean up the /var/cache/pacman/pkg directory.
 More versatile than 'pacman -Sc' in that you can select how many old versions
 to keep.
-Usage: cacheclean {-p} {-v} <# of copies to keep>
-    # of copies to keep - (required) how many generations of each package to keep
-    -p - (optional) preview what would be deleted; forces verbose (-v) mode.
-    -v - (optional) show deleted packages.
-    -d - (optional) non-standard cache directory.
+
+Usage: cacheclean [-p] [-v] [-d] n
+
+Options:
+    n    How many generations of each package to keep (required).
+   -p    Preview what would be deleted; forces verbose (-v) mode.
+   -v    Show deleted packages.
+   -d    Specify a non-standard cache directory.
 """
 
 # Note that the determination of package age is done by simply looking at the date-time
@@ -54,7 +57,7 @@ def cleanup(run_list):
         for dfn in kill_list:
             os.unlink(dfn)
 
-######################################################################
+
 # Mainline processing
 opt_dir = '/var/cache/pacman/pkg'
 
@@ -65,9 +68,9 @@ try:
     opt_preview = '-p' in opt_dict
     opt_verbose = '-v' in opt_dict
     if '-d' in opt_dict: 
-    	opt_dir = opt_dict['-d']
+        opt_dir = opt_dict['-d']
     if opt_preview:
-    	opt_verbose = True
+        opt_verbose = True
 
     if len(pargs) == 1:
         n_to_keep = pargs[0]
@@ -77,13 +80,14 @@ try:
     try:
         n_to_keep = int(n_to_keep)
         if n_to_keep <= 0: 
-        	raise ValueError
+            raise ValueError
     except ValueError as e:
         raise getopt.GetoptError("# of copies to keep must be numeric > 0!")
 
 except getopt.GetoptError as msg:
     print('Error:', msg, '\n', __doc__)
     sys.exit(1)
+
 
 # Change to the pkg directory & get a sorted list of its contents
 os.chdir(opt_dir)
