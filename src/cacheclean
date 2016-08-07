@@ -28,34 +28,38 @@ def fn_stats(fn):
     s = os.stat(fn)
     return (s[8], fn, s[6])
 
-# Cleanup does the actual pkg file deletion.
+# This does the actual pkg file deletion.
 def cleanup(run_list):
-    # strictly speaking only the first two of these globals need to be listed.
+    # Strictly speaking only the first two of these globals need to be listed.
     global n_deleted, bytes_deleted, opt_verbose, opt_preview, n_to_keep
-    # return if the run_list is too short
+    # Return if the run_list is too short
     #print run_list
     #return
-    if len(run_list) <= n_to_keep: return
+    if len(run_list) <= n_to_keep:
+        return
     # Build list of tuples (date-time file modified, file name, file size)
     dtm_list = [fn_stats(tfn) for tfn in run_list]
     # Sort the list by date-time
     dtm_list.sort()
     # Build list of the filenames to delete (all but last n_to_keep).
     # <showing_off>
-    #kill_list = [tfn[1] for tfn in dtm_list[:-n_to_keep]]
+    #remove_list = [tfn[1] for tfn in dtm_list[:-n_to_keep]]
     #bytes_deleted = sum(x[2] for x in dtm_list[:-n_to_keep])
     # </showing_off>
-    kill_list = []
+    remove_list = []
     for x in dtm_list[:-n_to_keep]:
         if os.path.isfile(x[1]):
-            kill_list.append(x[1])
+            remove_list.append(x[1])
             bytes_deleted += x[2]
-    if opt_verbose and kill_list: print (kill_list)
-    n_deleted += len(kill_list)
-    # and finally delete (if not in preview mode)
+    if opt_verbose and remove_list: print (remove_list)
+    n_deleted += len(remove_list)
+    # And finally delete (if not in preview mode)
     if not opt_preview:
-        for dfn in kill_list:
-            os.unlink(dfn)
+        for dfn in remove_list:
+            try:
+                os.unlink(dfn)
+            except PermissionError:
+                sys.exit('Permission denied: You need root permisions to remove these files.')
 
 
 # Mainline processing
@@ -121,11 +125,11 @@ for run_end in range(len(pkg_fns)):
         if mo:
             # print("Processing file '" + fn + "' " + str(mo.lastindex), file=sys.stdout)
             tbase = mo.group(1) # gets the 'base' package name
-            # include the architecture in the name if it's present
+            # Include the architecture in the name if it's present
             if mo.group(2) is not None:
                 tbase += mo.group(2)
             # print('tbase: ' + tbase + '  ' + str(mo.lastindex), file=sys.stdout)
-            # is it a new base name, i.e. the start of a new run?
+            # Is it a new base name, i.e. the start of a new run?
             if tbase != pkg_base_nm: # if so then process the prior run
                 if pkg_base_nm != '':
                     cleanup(pkg_fns[run_start:run_end])
